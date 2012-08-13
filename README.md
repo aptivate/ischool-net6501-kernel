@@ -14,7 +14,44 @@ Soekris Net6501 platform.
 	patch -p1 < ../*.patch
 	PATH=/usr/lib/ccache:$PATH time ionice -c3 nice fakeroot \
 		make-kpkg -j 5 --initrd \
-		--append-to-version=-cw-net6501-120813-1 --revision=1 \
+		--append-to-version=-net6501-120813-1cw --revision=1 \
 		kernel-image kernel-headers kernel-debug
 
+Please use a different version number in `--append-to-version`,
+e.g. using your initials and the current date.
 
+The Grub installation on the Soekris will automatically boot to
+the latest installed kernel if you run `update-grub` after
+installation.
+
+You can also install these kernels in the chroot environment and
+then copy the updated image to a school server like this:
+
+	./copy-soekris.sh ./root-working 192.168.128.201: \
+		--exclude media/hdb1/ischool/ischool.zm \
+		--exclude 'media/hdb1/system-imager/image.*' \
+		--exclude /etc/hostname
+
+Sources for the patches:
+
+* [Atop 2.6.33](http://www.atoptool.nl/download/atoppatch-kernel-2.6.33.tar.gz),
+  partially applied by hand to fit 3.2.20
+* `ie6xx_wdt` (watchdog driver): backported `drivers/mfd/lpc_sch.c` and 
+  `drivers/watchdog/ie6xx_wdt.c` from `linux-next`
+* `soekris-net6501` and `leds-net6501`: written by me, submitted to
+  `platform-driver-x86` and `linux-leds@vger.kernel.org`
+* watchdog panic bugfix: written by me, submitted to
+  `linux-watchdog@vger.kernel.org`
+
+Other config customisations that I remember (compare kernel.config
+to kernel.config-3.2.20-1~bpo60+1 for the full monty):
+
+* Optimise the kernel for Intel Atom
+* Enable SMP support
+* Disable loads of unnecessary drivers to speed up compilation
+* Enable [LatencyTOP](http://lwn.net/Articles/266153/)
+* Enable [Atop](http://www.atoptool.nl/)
+* Set the default hostname to `soekris` instead of `(none)`
+* Enable `/proc/config.gz` for checking the actual configuration
+  of a running kernel
+  
