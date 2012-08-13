@@ -1,0 +1,92 @@
+From df152ed9697dfc7fc7dd81878773d4d39a68efbe Mon Sep 17 00:00:00 2001
+From: Chris Wilson <chris+github@qwirx.com>
+Date: Mon, 13 Aug 2012 14:04:19 +0200
+Subject: [PATCH 4/4] ie6xx_wdt: Pin lpc_sch while watchdog is open to avoid
+ panic on removal.
+
+If somebody removes that driver, it will unregister the platform device
+which will set watchdog_dev.c:wdd to NULL, which will cause a kernel panic
+the next time the watchdog daemon accesses /dev/watchdog. You can easily
+reproduce the panic by doing just that.
+
+Therefore we shouldn't be allowed to remove lpc_sch while the watchdog
+is in use, so this patch keeps it pinned.
+
+Signed-off-by: Chris Wilson <chris+github@qwirx.com>
+---
+ drivers/watchdog/ie6xx_wdt.c |   23 ++++++++++++++++++++++-
+ 1 files changed, 22 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/watchdog/ie6xx_wdt.c b/drivers/watchdog/ie6xx_wdt.c
+index 6b7b520..6d95120 100644
+--- a/drivers/watchdog/ie6xx_wdt.c
++++ b/drivers/watchdog/ie6xx_wdt.c
+@@ -83,6 +83,7 @@ MODULE_PARM_DESC(resetmode,
+ static struct {
+ 	unsigned short sch_wdtba;
+ 	struct spinlock unlock_sequence;
++	struct platform_device *pdev;
+ #ifdef CONFIG_DEBUG_FS
+ 	struct dentry *debugfs;
+ #endif
+@@ -147,6 +148,15 @@ static int ie6xx_wdt_set_timeout(struct watchdog_device *wdd, unsigned int t)
+ 
+ static int ie6xx_wdt_start(struct watchdog_device *wdd)
+ {
++	/* watchdog_dev.c has pinned this module, but nobody pinned lpc_sch.
++	If it's unloaded while the device is open, the device will be
++	unregistered, watchdog_dev will set its wdd to NULL and the next file
++	operation will panic. So we'd better pin lpc_sch, or more accurately,
++	whoever created the parent (pci_device) of the platform_device that
++	we're using, because it wasn't us! */
++	if (!try_module_get(ie6xx_wdt_data.pdev->dev.parent->driver->owner))
++		return -ESHUTDOWN; // driver is unloading
++
+ 	ie6xx_wdt_set_timeout(wdd, wdd->timeout);
+ 
+ 	/* Enable the watchdog timer */
+@@ -167,6 +177,8 @@ static int ie6xx_wdt_stop(struct watchdog_device *wdd)
+ 	outb(0, ie6xx_wdt_data.sch_wdtba + WDTLR);
+ 	spin_unlock(&ie6xx_wdt_data.unlock_sequence);
+ 
++	module_put(ie6xx_wdt_data.pdev->dev.parent->driver->owner);
++
+ 	return 0;
+ }
+ 
+@@ -277,8 +289,15 @@ static int __devinit ie6xx_wdt_probe(struct platform_device *pdev)
+ 		outb(WDT_TIMEOUT, ie6xx_wdt_data.sch_wdtba + RR1);
+ 	}
+ 
++	// Need to remember our platform_device so we can pin its owner
++	// while the watchdog is open.
++	ie6xx_wdt_data.pdev = pdev;
++	dev_info(&pdev->dev, "pdev owner: %s\n", pdev->dev.driver->owner->name);
++
+ 	ie6xx_wdt_dev.timeout = timeout;
+-	watchdog_set_nowayout(&ie6xx_wdt_dev, nowayout);
++	// watchdog_set_nowayout(&ie6xx_wdt_dev, nowayout);
++	if (nowayout)
++		set_bit(WDOG_NO_WAY_OUT, &ie6xx_wdt_dev.status);
+ 
+ 	spin_lock_init(&ie6xx_wdt_data.unlock_sequence);
+ 
+@@ -304,6 +323,7 @@ misc_register_error:
+ 	ie6xx_wdt_debugfs_exit();
+ 	release_region(res->start, resource_size(res));
+ 	ie6xx_wdt_data.sch_wdtba = 0;
++	ie6xx_wdt_data.pdev = NULL;
+ 	return ret;
+ }
+ 
+@@ -317,6 +337,7 @@ static int __devexit ie6xx_wdt_remove(struct platform_device *pdev)
+ 	ie6xx_wdt_debugfs_exit();
+ 	release_region(res->start, resource_size(res));
+ 	ie6xx_wdt_data.sch_wdtba = 0;
++	ie6xx_wdt_data.pdev = NULL;
+ 
+ 	return 0;
+ }
+-- 
+1.7.5.4
+

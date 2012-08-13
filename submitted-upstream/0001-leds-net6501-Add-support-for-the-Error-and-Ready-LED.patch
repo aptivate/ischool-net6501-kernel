@@ -1,0 +1,187 @@
+From 4916d5eaa4924273e635c1c91277103805c3eab5 Mon Sep 17 00:00:00 2001
+From: Chris Wilson <chris+github@qwirx.com>
+Date: Thu, 9 Aug 2012 08:08:44 +0200
+Subject: [PATCH 1/4] leds-net6501: Add support for the Error and Ready LEDs
+ on the Soekris Net6501.
+
+This is the second version, with corrections requested by Bryan Wu.
+The platform_device creation is moved out of this module and into
+the soekris-net6501 board driver as requested.
+
+Note that this makes the leds driver do nothing unless soekris-net6501
+is loaded (or compiled in) as well.
+
+Signed-off-by: Chris Wilson <chris+github@qwirx.com>
+---
+ drivers/leds/Kconfig        |    7 +++
+ drivers/leds/Makefile       |    1 +
+ drivers/leds/leds-net6501.c |  127 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 135 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/leds/leds-net6501.c
+
+diff --git a/drivers/leds/Kconfig b/drivers/leds/Kconfig
+index c96bbaa..4e22b65 100644
+--- a/drivers/leds/Kconfig
++++ b/drivers/leds/Kconfig
+@@ -95,6 +95,13 @@ config LEDS_NET48XX
+ 	  This option enables support for the Soekris net4801 and net4826 error
+ 	  LED.
+ 
++config LEDS_NET6501
++	tristate "LED Support for Soekris net6501 series LEDs"
++	depends on LEDS_CLASS
++	help
++	  This option enables support for the Soekris net6501 Error and Ready
++	  LED.
++
+ config LEDS_FSG
+ 	tristate "LED Support for the Freecom FSG-3"
+ 	depends on LEDS_CLASS
+diff --git a/drivers/leds/Makefile b/drivers/leds/Makefile
+index a4429a9..329a73b 100644
+--- a/drivers/leds/Makefile
++++ b/drivers/leds/Makefile
+@@ -14,6 +14,7 @@ obj-$(CONFIG_LEDS_LM3533)		+= leds-lm3533.o
+ obj-$(CONFIG_LEDS_MIKROTIK_RB532)	+= leds-rb532.o
+ obj-$(CONFIG_LEDS_S3C24XX)		+= leds-s3c24xx.o
+ obj-$(CONFIG_LEDS_NET48XX)		+= leds-net48xx.o
++obj-$(CONFIG_LEDS_NET6501)		+= leds-net6501.o
+ obj-$(CONFIG_LEDS_WRAP)			+= leds-wrap.o
+ obj-$(CONFIG_LEDS_COBALT_QUBE)		+= leds-cobalt-qube.o
+ obj-$(CONFIG_LEDS_COBALT_RAQ)		+= leds-cobalt-raq.o
+diff --git a/drivers/leds/leds-net6501.c b/drivers/leds/leds-net6501.c
+new file mode 100644
+index 0000000..e2b082c
+--- /dev/null
++++ b/drivers/leds/leds-net6501.c
+@@ -0,0 +1,127 @@
++/*
++ * LED devices for the Soekris Net6501
++ * http://www.mail-archive.com/soekris-tech@lists.soekris.com/msg06738.html
++ *
++ * Copyright 2012 Chris Wilson <chris+soekris@aptivate.org>
++ * based on leds-hp6xx.c by Kristoffer Ericson <kristoffer.ericson@gmail.com>
++ * parts based on gdrom.c by Adrian McMenamin <adrian@mcmen.demon.co.uk>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/platform_device.h>
++#include <linux/leds.h>
++
++/*
++ * These magic numbers come from a post by Soren Kristensen (the board
++ * designer?) on the soekris mailing list:
++ * http://www.mail-archive.com/soekris-tech@lists.soekris.com/msg06738.html
++ */ 
++#define LED_ERROR 0x069C
++#define LED_READY 0x069D
++#define REGION_START 0x069C
++#define REGION_LEN 2
++
++#define DRIVER_NAME "leds-net6501"
++
++static void net6501_led_error_set(struct led_classdev *led_cdev,
++	enum led_brightness value)
++{
++	u8 old_value, new_value;
++
++	old_value = inb(LED_ERROR);
++	new_value = (old_value & ~1) | (value ? 1 : 0);
++	outb(new_value, LED_ERROR);
++}
++
++static void net6501_led_ready_set(struct led_classdev *led_cdev,
++	enum led_brightness value)
++{
++	u8 old_value, new_value;
++
++	old_value = inb(LED_READY);
++	new_value = (old_value & ~1) | (value ? 1 : 0);
++	outb(new_value, LED_READY);
++}
++
++static struct led_classdev net6501_led_error = {
++	.name			= "net6501:red:error",
++	.default_trigger	= "timer",
++	.brightness_set		= net6501_led_error_set,
++	.flags			= LED_CORE_SUSPENDRESUME,
++};
++
++static struct led_classdev net6501_led_ready = {
++	.name			= "net6501:green:ready",
++	.default_trigger	= NULL,
++	.brightness_set		= net6501_led_ready_set,
++	.flags			= LED_CORE_SUSPENDRESUME,
++};
++
++static int net6501_leds_probe(struct platform_device *pdev)
++{
++	int ret;
++
++	if (!request_region(REGION_START, REGION_LEN, DRIVER_NAME))
++	{
++		printk(KERN_WARNING DRIVER_NAME ": I/O region 0x%x-0x%x "
++			"is busy\n", REGION_START,
++			REGION_START + REGION_LEN - 1);
++		return -EBUSY;
++	}
++
++	ret = led_classdev_register(&pdev->dev, &net6501_led_error);
++	if (ret < 0)
++	{
++		printk(KERN_WARNING DRIVER_NAME ": failed to register "
++			"error LED device: error %d\n", ret);
++		goto release_registered_region;
++	}
++
++	ret = led_classdev_register(&pdev->dev, &net6501_led_ready);
++	if (ret < 0)
++	{
++		printk(KERN_WARNING DRIVER_NAME ": failed to register "
++			"ready LED device: error %d\n", ret);
++		goto unregister_led_error;
++	}
++
++	return 0;
++
++unregister_led_error:
++	led_classdev_unregister(&net6501_led_error);
++
++release_registered_region:
++	release_region(REGION_START, REGION_LEN);
++
++	return ret;
++}
++
++static int net6501_leds_remove(struct platform_device *pdev)
++{
++	led_classdev_unregister(&net6501_led_ready);
++	led_classdev_unregister(&net6501_led_error);
++	release_region(REGION_START, REGION_LEN);
++	return 0;
++}
++
++static struct platform_driver net6501_leds_driver = {
++	.probe		= net6501_leds_probe,
++	.remove		= net6501_leds_remove,
++	.driver		= {
++		.name		= DRIVER_NAME,
++		.owner		= THIS_MODULE,
++	},
++};
++
++module_platform_driver(net6501_leds_driver);
++
++MODULE_AUTHOR("Chris Wilson <chris+soekris@aptivate.org>");
++MODULE_DESCRIPTION("Soekris Net6051 LED driver");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:" DRIVER_NAME);
+-- 
+1.7.5.4
+
