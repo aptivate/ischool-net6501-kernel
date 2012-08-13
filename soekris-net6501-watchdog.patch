@@ -1,8 +1,3 @@
-diff -Nru --exclude '*o.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order linux-3.2.20/drivers/mfd/built-in.o linux-3.2.20-ischool/drivers/mfd/built-in.o
---- linux-3.2.20/drivers/mfd/built-in.o	1970-01-01 02:00:00.000000000 +0200
-+++ linux-3.2.20-ischool/drivers/mfd/built-in.o	2012-08-09 08:46:37.009839693 +0200
-@@ -0,0 +1 @@
-+!<arch>
 diff -Nru --exclude '*o.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order linux-3.2.20/drivers/mfd/lpc_sch.c linux-3.2.20-ischool/drivers/mfd/lpc_sch.c
 --- linux-3.2.20/drivers/mfd/lpc_sch.c	2012-06-10 15:42:13.000000000 +0200
 +++ linux-3.2.20-ischool/drivers/mfd/lpc_sch.c	2012-08-10 14:36:17.124023024 +0200
