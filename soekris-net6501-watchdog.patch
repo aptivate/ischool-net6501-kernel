@@ -1,4 +1,4 @@
-diff -Nru --exclude '*o.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order linux-3.2.20/drivers/mfd/lpc_sch.c linux-3.2.20-ischool/drivers/mfd/lpc_sch.c
+diff -Nru --exclude '.*.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order --exclude '*.lds' --exclude '*.s' --exclude '*.S' --exclude debian --exclude .tmp_versions --exclude .version --exclude '.*.d' --exclude '*.o' --exclude modules.builtin --exclude '*System.map' --exclude security --exclude scripts --exclude Module.symvers --exclude lib --exclude version.h --exclude generated --exclude '.config*' --exclude arch --exclude devlist.h --exclude '*.inc' --exclude scsi --exclude config_data.h --exclude timeconst.h --exclude gen-kdb_cmds.c linux-3.2.20/drivers/mfd/lpc_sch.c linux-3.2.20-ischool/drivers/mfd/lpc_sch.c
 --- linux-3.2.20/drivers/mfd/lpc_sch.c	2012-06-10 15:42:13.000000000 +0200
 +++ linux-3.2.20-ischool/drivers/mfd/lpc_sch.c	2012-08-10 14:36:17.124023024 +0200
 @@ -36,6 +36,7 @@
@@ -20,7 +20,8 @@ diff -Nru --exclude '*o.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*
  	},
  };
  
- static struct pci_device_id lpc_sch_ids[] = {
+-static struct pci_device_id lpc_sch_ids[] = {
++static DEFINE_PCI_DEVICE_TABLE(lpc_sch_ids) = {
  	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_SCH_LPC) },
  	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_ITC_LPC) },
 +	{ PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CENTERTON_ILB) },
@@ -50,7 +51,27 @@ diff -Nru --exclude '*o.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*
  		pci_read_config_dword(dev, WDTBASE, &base_addr_cfg);
  		if (!(base_addr_cfg & (1 << 31))) {
  			dev_err(&dev->dev, "Decode of the WDT I/O range disabled\n");
-diff -Nru --exclude '*o.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order linux-3.2.20/drivers/watchdog/ie6xx_wdt.c linux-3.2.20-ischool/drivers/watchdog/ie6xx_wdt.c
+@@ -167,18 +174,7 @@
+ 	.remove		= __devexit_p(lpc_sch_remove),
+ };
+ 
+-static int __init lpc_sch_init(void)
+-{
+-	return pci_register_driver(&lpc_sch_driver);
+-}
+-
+-static void __exit lpc_sch_exit(void)
+-{
+-	pci_unregister_driver(&lpc_sch_driver);
+-}
+-
+-module_init(lpc_sch_init);
+-module_exit(lpc_sch_exit);
++module_pci_driver(lpc_sch_driver);
+ 
+ MODULE_AUTHOR("Denis Turischev <denis@compulab.co.il>");
+ MODULE_DESCRIPTION("LPC interface for Intel Poulsbo SCH");
+diff -Nru --exclude '.*.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order --exclude '*.lds' --exclude '*.s' --exclude '*.S' --exclude debian --exclude .tmp_versions --exclude .version --exclude '.*.d' --exclude '*.o' --exclude modules.builtin --exclude '*System.map' --exclude security --exclude scripts --exclude Module.symvers --exclude lib --exclude version.h --exclude generated --exclude '.config*' --exclude arch --exclude devlist.h --exclude '*.inc' --exclude scsi --exclude config_data.h --exclude timeconst.h --exclude gen-kdb_cmds.c linux-3.2.20/drivers/watchdog/ie6xx_wdt.c linux-3.2.20-ischool/drivers/watchdog/ie6xx_wdt.c
 --- linux-3.2.20/drivers/watchdog/ie6xx_wdt.c	1970-01-01 02:00:00.000000000 +0200
 +++ linux-3.2.20-ischool/drivers/watchdog/ie6xx_wdt.c	2012-08-13 08:45:57.266891126 +0200
 @@ -0,0 +1,381 @@
@@ -435,7 +456,7 @@ diff -Nru --exclude '*o.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*
 +MODULE_LICENSE("GPL");
 +MODULE_ALIAS_MISCDEV(WATCHDOG_MINOR);
 +MODULE_ALIAS("platform:" DRIVER_NAME);
-diff -Nru --exclude '*o.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order linux-3.2.20/drivers/watchdog/Kconfig linux-3.2.20-ischool/drivers/watchdog/Kconfig
+diff -Nru --exclude '.*.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order --exclude '*.lds' --exclude '*.s' --exclude '*.S' --exclude debian --exclude .tmp_versions --exclude .version --exclude '.*.d' --exclude '*.o' --exclude modules.builtin --exclude '*System.map' --exclude security --exclude scripts --exclude Module.symvers --exclude lib --exclude version.h --exclude generated --exclude '.config*' --exclude arch --exclude devlist.h --exclude '*.inc' --exclude scsi --exclude config_data.h --exclude timeconst.h --exclude gen-kdb_cmds.c linux-3.2.20/drivers/watchdog/Kconfig linux-3.2.20-ischool/drivers/watchdog/Kconfig
 --- linux-3.2.20/drivers/watchdog/Kconfig	2012-06-10 15:42:13.000000000 +0200
 +++ linux-3.2.20-ischool/drivers/watchdog/Kconfig	2012-08-09 08:19:21.470207736 +0200
 @@ -545,6 +545,19 @@
@@ -458,7 +479,7 @@ diff -Nru --exclude '*o.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*
  config INTEL_SCU_WATCHDOG
  	bool "Intel SCU Watchdog for Mobile Platforms"
  	depends on X86_MRST
-diff -Nru --exclude '*o.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order linux-3.2.20/drivers/watchdog/Makefile linux-3.2.20-ischool/drivers/watchdog/Makefile
+diff -Nru --exclude '.*.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order --exclude '*.lds' --exclude '*.s' --exclude '*.S' --exclude debian --exclude .tmp_versions --exclude .version --exclude '.*.d' --exclude '*.o' --exclude modules.builtin --exclude '*System.map' --exclude security --exclude scripts --exclude Module.symvers --exclude lib --exclude version.h --exclude generated --exclude '.config*' --exclude arch --exclude devlist.h --exclude '*.inc' --exclude scsi --exclude config_data.h --exclude timeconst.h --exclude gen-kdb_cmds.c linux-3.2.20/drivers/watchdog/Makefile linux-3.2.20-ischool/drivers/watchdog/Makefile
 --- linux-3.2.20/drivers/watchdog/Makefile	2012-06-10 15:42:13.000000000 +0200
 +++ linux-3.2.20-ischool/drivers/watchdog/Makefile	2012-08-09 08:19:38.522422588 +0200
 @@ -81,6 +81,7 @@
@@ -469,3 +490,135 @@ diff -Nru --exclude '*o.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*
  obj-$(CONFIG_ITCO_WDT) += iTCO_wdt.o
  ifeq ($(CONFIG_ITCO_VENDOR_SUPPORT),y)
  obj-$(CONFIG_ITCO_WDT) += iTCO_vendor_support.o
+diff -Nru --exclude '.*.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order --exclude '*.lds' --exclude '*.s' --exclude '*.S' --exclude debian --exclude .tmp_versions --exclude .version --exclude '.*.d' --exclude '*.o' --exclude modules.builtin --exclude '*System.map' --exclude security --exclude scripts --exclude Module.symvers --exclude lib --exclude version.h --exclude generated --exclude '.config*' --exclude arch --exclude devlist.h --exclude '*.inc' --exclude scsi --exclude config_data.h --exclude timeconst.h --exclude gen-kdb_cmds.c linux-3.2.20/include/linux/device.h linux-3.2.20-ischool/include/linux/device.h
+--- linux-3.2.20/include/linux/device.h	2012-06-10 15:42:13.000000000 +0200
++++ linux-3.2.20-ischool/include/linux/device.h	2012-08-10 13:28:19.214631371 +0200
+@@ -924,4 +924,30 @@
+ #define sysfs_deprecated 0
+ #endif
+ 
++/**
++ * module_driver() - Helper macro for drivers that don't do anything
++ * special in module init/exit. This eliminates a lot of boilerplate.
++ * Each module may only use this macro once, and calling it replaces
++ * module_init() and module_exit().
++ *
++ * @__driver: driver name
++ * @__register: register function for this driver type
++ * @__unregister: unregister function for this driver type
++ * @...: Additional arguments to be passed to __register and __unregister.
++ *
++ * Use this macro to construct bus specific macros for registering
++ * drivers, and do not use it on its own.
++ */
++#define module_driver(__driver, __register, __unregister, ...) \
++static int __init __driver##_init(void) \
++{ \
++	return __register(&(__driver) , ##__VA_ARGS__); \
++} \
++module_init(__driver##_init); \
++static void __exit __driver##_exit(void) \
++{ \
++	__unregister(&(__driver) , ##__VA_ARGS__); \
++} \
++module_exit(__driver##_exit);
++
+ #endif /* _DEVICE_H_ */
+diff -Nru --exclude '.*.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order --exclude '*.lds' --exclude '*.s' --exclude '*.S' --exclude debian --exclude .tmp_versions --exclude .version --exclude '.*.d' --exclude '*.o' --exclude modules.builtin --exclude '*System.map' --exclude security --exclude scripts --exclude Module.symvers --exclude lib --exclude version.h --exclude generated --exclude '.config*' --exclude arch --exclude devlist.h --exclude '*.inc' --exclude scsi --exclude config_data.h --exclude timeconst.h --exclude gen-kdb_cmds.c linux-3.2.20/include/linux/pci.h linux-3.2.20-ischool/include/linux/pci.h
+--- linux-3.2.20/include/linux/pci.h	2012-06-10 15:42:13.000000000 +0200
++++ linux-3.2.20-ischool/include/linux/pci.h	2012-08-10 13:29:35.147689044 +0200
+@@ -941,6 +941,19 @@
+ 	__pci_register_driver(driver, THIS_MODULE, KBUILD_MODNAME)
+ 
+ void pci_unregister_driver(struct pci_driver *dev);
++
++/**
++ * module_pci_driver() - Helper macro for registering a PCI driver
++ * @__pci_driver: pci_driver struct
++ *
++ * Helper macro for PCI drivers which do not do anything special in module
++ * init/exit. This eliminates a lot of boilerplate. Each module may only
++ * use this macro once, and calling it replaces module_init() and module_exit()
++ */
++#define module_pci_driver(__pci_driver) \
++	module_driver(__pci_driver, pci_register_driver, \
++		       pci_unregister_driver)
++
+ void pci_remove_behind_bridge(struct pci_dev *dev);
+ struct pci_driver *pci_dev_driver(const struct pci_dev *dev);
+ int pci_add_dynid(struct pci_driver *drv,
+diff -Nru --exclude '.*.cmd' --exclude '*.mod.c' --exclude '*.orig' --exclude '*.rej' --exclude modules.order --exclude '*.lds' --exclude '*.s' --exclude '*.S' --exclude debian --exclude .tmp_versions --exclude .version --exclude '.*.d' --exclude '*.o' --exclude modules.builtin --exclude '*System.map' --exclude security --exclude scripts --exclude Module.symvers --exclude lib --exclude version.h --exclude generated --exclude '.config*' --exclude arch --exclude devlist.h --exclude '*.inc' --exclude scsi --exclude config_data.h --exclude timeconst.h --exclude gen-kdb_cmds.c linux-3.2.20/include/linux/pci_ids.h linux-3.2.20-ischool/include/linux/pci_ids.h
+--- linux-3.2.20/include/linux/pci_ids.h	2012-06-10 15:42:13.000000000 +0200
++++ linux-3.2.20-ischool/include/linux/pci_ids.h	2012-08-09 15:33:18.909686968 +0200
+@@ -517,6 +517,7 @@
+ #define PCI_DEVICE_ID_AMD_11H_NB_DRAM	0x1302
+ #define PCI_DEVICE_ID_AMD_11H_NB_MISC	0x1303
+ #define PCI_DEVICE_ID_AMD_11H_NB_LINK	0x1304
++#define PCI_DEVICE_ID_AMD_15H_M10H_F3	0x1403
+ #define PCI_DEVICE_ID_AMD_15H_NB_F0	0x1600
+ #define PCI_DEVICE_ID_AMD_15H_NB_F1	0x1601
+ #define PCI_DEVICE_ID_AMD_15H_NB_F2	0x1602
+@@ -776,6 +777,29 @@
+ #define PCI_DEVICE_ID_ELSA_QS3000	0x3000
+ 
+ #define PCI_VENDOR_ID_STMICRO		0x104A
++#define PCI_DEVICE_ID_STMICRO_USB_HOST	0xCC00
++#define PCI_DEVICE_ID_STMICRO_USB_OHCI	0xCC01
++#define PCI_DEVICE_ID_STMICRO_USB_OTG	0xCC02
++#define PCI_DEVICE_ID_STMICRO_UART_HWFC 0xCC03
++#define PCI_DEVICE_ID_STMICRO_UART_NO_HWFC	0xCC04
++#define PCI_DEVICE_ID_STMICRO_SOC_DMA	0xCC05
++#define PCI_DEVICE_ID_STMICRO_SATA	0xCC06
++#define PCI_DEVICE_ID_STMICRO_I2C	0xCC07
++#define PCI_DEVICE_ID_STMICRO_SPI_HS	0xCC08
++#define PCI_DEVICE_ID_STMICRO_MAC	0xCC09
++#define PCI_DEVICE_ID_STMICRO_SDIO_EMMC 0xCC0A
++#define PCI_DEVICE_ID_STMICRO_SDIO	0xCC0B
++#define PCI_DEVICE_ID_STMICRO_GPIO	0xCC0C
++#define PCI_DEVICE_ID_STMICRO_VIP	0xCC0D
++#define PCI_DEVICE_ID_STMICRO_AUDIO_ROUTER_DMA	0xCC0E
++#define PCI_DEVICE_ID_STMICRO_AUDIO_ROUTER_SRCS 0xCC0F
++#define PCI_DEVICE_ID_STMICRO_AUDIO_ROUTER_MSPS 0xCC10
++#define PCI_DEVICE_ID_STMICRO_CAN	0xCC11
++#define PCI_DEVICE_ID_STMICRO_MLB	0xCC12
++#define PCI_DEVICE_ID_STMICRO_DBP	0xCC13
++#define PCI_DEVICE_ID_STMICRO_SATA_PHY	0xCC14
++#define PCI_DEVICE_ID_STMICRO_ESRAM	0xCC15
++#define PCI_DEVICE_ID_STMICRO_VIC	0xCC16
+ 
+ #define PCI_VENDOR_ID_BUSLOGIC		      0x104B
+ #define PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER_NC 0x0140
+@@ -2082,6 +2106,7 @@
+ #define PCI_DEVICE_ID_NX2_57711E	0x1650
+ #define PCI_DEVICE_ID_TIGON3_5705	0x1653
+ #define PCI_DEVICE_ID_TIGON3_5705_2	0x1654
++#define PCI_DEVICE_ID_TIGON3_5719	0x1657
+ #define PCI_DEVICE_ID_TIGON3_5721	0x1659
+ #define PCI_DEVICE_ID_TIGON3_5722	0x165a
+ #define PCI_DEVICE_ID_TIGON3_5723	0x165b
+@@ -2482,6 +2507,7 @@
+ #define PCI_DEVICE_ID_INTEL_MRST_SD2	0x084F
+ #define PCI_DEVICE_ID_INTEL_I960	0x0960
+ #define PCI_DEVICE_ID_INTEL_I960RM	0x0962
++#define PCI_DEVICE_ID_INTEL_CENTERTON_ILB	0x0c60
+ #define PCI_DEVICE_ID_INTEL_8257X_SOL	0x1062
+ #define PCI_DEVICE_ID_INTEL_82573E_SOL	0x1085
+ #define PCI_DEVICE_ID_INTEL_82573L_SOL	0x108F
+@@ -2730,6 +2756,17 @@
+ #define PCI_DEVICE_ID_INTEL_IOAT_SNB7	0x3c27
+ #define PCI_DEVICE_ID_INTEL_IOAT_SNB8	0x3c2e
+ #define PCI_DEVICE_ID_INTEL_IOAT_SNB9	0x3c2f
++#define PCI_DEVICE_ID_INTEL_UNC_HA	0x3c46
++#define PCI_DEVICE_ID_INTEL_UNC_IMC0	0x3cb0
++#define PCI_DEVICE_ID_INTEL_UNC_IMC1	0x3cb1
++#define PCI_DEVICE_ID_INTEL_UNC_IMC2	0x3cb4
++#define PCI_DEVICE_ID_INTEL_UNC_IMC3	0x3cb5
++#define PCI_DEVICE_ID_INTEL_UNC_QPI0	0x3c41
++#define PCI_DEVICE_ID_INTEL_UNC_QPI1	0x3c42
++#define PCI_DEVICE_ID_INTEL_UNC_R2PCIE	0x3c43
++#define PCI_DEVICE_ID_INTEL_UNC_R3QPI0	0x3c44
++#define PCI_DEVICE_ID_INTEL_UNC_R3QPI1	0x3c45
++#define PCI_DEVICE_ID_INTEL_JAKETOWN_UBOX	0x3ce0
+ #define PCI_DEVICE_ID_INTEL_IOAT_SNB	0x402f
+ #define PCI_DEVICE_ID_INTEL_5100_16	0x65f0
+ #define PCI_DEVICE_ID_INTEL_5100_21	0x65f5
