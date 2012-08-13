@@ -54,4 +54,44 @@ to kernel.config-3.2.20-1~bpo60+1 for the full monty):
 * Set the default hostname to `soekris` instead of `(none)`
 * Enable `/proc/config.gz` for checking the actual configuration
   of a running kernel
-  
+
+If you want to compare the built kernel source with the original,
+for example to rebuild patches after making local changes, you can
+use a command like this:
+
+	diff -Nru linux-3.2.20 linux-3.2.20-ischool \
+		--exclude '.*.cmd' \
+		--exclude '.*.d' \
+		--exclude '*.inc' \
+		--exclude '*.lds' \
+		--exclude '*.mod.c' \
+		--exclude '*.o' \
+		--exclude '*.orig' \ 
+		--exclude '*.rej' \
+		--exclude '*.s' \
+		--exclude '*.S' \
+		--exclude '.config*' \
+		--exclude .tmp_versions \
+		--exclude .version \
+		--exclude Module.symvers \
+		--exclude modules.builtin \
+		--exclude modules.order \
+		--exclude '*System.map' \
+		--exclude arch \
+		--exclude config \
+		--exclude debian \
+		--exclude generated \
+		--exclude lib \
+		--exclude scripts \
+		--exclude scsi \
+		--exclude security \
+		--exclude vt \
+		--exclude config_data.h \
+		--exclude devlist.h \
+		--exclude gen-kdb_cmds.c \
+		--exclude timeconst.h \
+		--exclude version.h \
+		| grep -v '^Binary files' \
+		| tee linux-3.2.20-ischool.patch
+
+
